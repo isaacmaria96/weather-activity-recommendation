@@ -1,0 +1,9 @@
+export const FORECAST_FRESHNESS_MS = 6 * 60 * 60 * 1000;
+export const FORECAST_STALE_MAX_MS = 24 * 60 * 60 * 1000;
+export const FORECAST_RETENTION_DAYS = 30;
+
+export const FORECAST_CACHE_TTL_SECONDS = 24 * 60 * 60;
+export const LOCATION_SEARCH_CACHE_TTL_SECONDS = 24 * 60 * 60;
+
+export const FORECAST_DAYS = 7;
+export const MAX_LOCATION_QUERY_LENGTH = 120;

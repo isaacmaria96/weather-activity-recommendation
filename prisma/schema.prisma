@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Location {
+  id                 String             @id @default(cuid())
+  provider           String
+  providerLocationId String
+  name               String
+  country            String
+  countryCode        String?
+  region             String?
+  latitude           Float
+  longitude          Float
+  timezone           String
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  forecastSnapshots  ForecastSnapshot[]
+
+  @@unique([provider, providerLocationId])
+  @@index([name])
+}
+
+model ForecastSnapshot {
+  id               String        @id @default(cuid())
+  locationId       String
+  fetchedAt        DateTime
+  weatherAvailable Boolean
+  marineAvailable  Boolean
+  location         Location      @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  days             ForecastDay[]
+
+  @@index([locationId, fetchedAt(sort: Desc)])
+}
+
+model ForecastDay {
+  id                          String           @id @default(cuid())
+  snapshotId                  String
+  localDate                   DateTime         @db.Date
+  minTemperature              Float?
+  maxTemperature              Float?
+  precipitationProbabilityMax Float?
+  precipitationSum            Float?
+  rainSum                     Float?
+  snowfallSum                 Float?
+  maxWindSpeed                Float?
+  weatherCode                 Int?
+  sunshineDuration            Float?
+  maxWaveHeight               Float?
+  maxWavePeriod               Float?
+  maxWindWaveHeight           Float?
+  maxSwellHeight              Float?
+  maxSwellPeriod              Float?
+  snapshot                    ForecastSnapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
+
+  @@unique([snapshotId, localDate])
+  @@index([snapshotId, localDate])
+}
