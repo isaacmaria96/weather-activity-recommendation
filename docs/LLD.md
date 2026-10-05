@@ -381,8 +381,8 @@ searchLocations(query)
 Rules:
 
 - Trim whitespace.
-- Reject empty input.
-- Apply a reasonable maximum query length.
+- Return no candidates for empty/whitespace-only input without calling the provider.
+- Apply a reasonable maximum query length to non-empty input.
 - Do not silently choose one result when several candidates are plausible.
 - The service-issued `locationId` is used by subsequent ranking requests.
 
@@ -406,10 +406,12 @@ Weather providers
 
 ### Forecast cache
 
+The key is versioned at the cache representation level, not at the GraphQL endpoint level.
+
 Conceptually:
 
 ```text
-forecast:{locationId}
+weather-activity:v1:forecast:{locationId}
 ```
 
 The cached forecast includes enough metadata to identify the snapshot and determine its age.
@@ -419,7 +421,7 @@ The cached forecast includes enough metadata to identify the snapshot and determ
 Conceptually:
 
 ```text
-location-search:{normalizedQuery}
+weather-activity:v1:location-search:{normalizedQuery}
 ```
 
 ### Cache behaviour
@@ -703,6 +705,40 @@ Coordinates location validation, forecast retrieval, scoring, ranking, and respo
 
 ## 19. Repository Contracts
 
+### LocationUpsert
+
+`LocationUpsert` is the application-facing persistence input used when persisting provider-resolved locations.
+
+```ts
+type LocationUpsert = {
+  provider: string;
+  providerLocationId: string;
+  name: string;
+  country: string;
+  countryCode?: string;
+  region?: string;
+  latitude: number;
+  longitude: number;
+  timezone: string;
+};
+```
+
+`ProviderLocation` remains provider-specific and must not leak into the repository contract.
+
+The location persistence flow is:
+
+```text
+ProviderLocation
+      ↓
+provider adapter / application mapper
+      ↓
+LocationUpsert
+      ↓
+LocationRepository
+      ↓
+PostgreSQL
+```
+
 ### LocationRepository
 
 ```ts
@@ -710,7 +746,7 @@ interface LocationRepository {
   findById(id: string): Promise<Location | null>;
 
   upsertCandidates(
-    candidates: LocationCandidate[]
+    candidates: LocationUpsert[]
   ): Promise<Location[]>;
 }
 ```

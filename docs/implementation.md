@@ -504,17 +504,37 @@ export type ActivityScore = {
 
 Define interfaces in the application layer or a dedicated application contracts module.
 
+### LocationUpsert
+
+`LocationUpsert` is the application-facing persistence input used when persisting provider-resolved locations.
+
+```ts
+export type LocationUpsert = {
+  provider: string;
+  providerLocationId: string;
+  name: string;
+  country: string;
+  countryCode?: string;
+  region?: string;
+  latitude: number;
+  longitude: number;
+  timezone: string;
+};
+```
+
+`ProviderLocation` remains provider-specific and must not leak into the repository contract.
+
 ### LocationRepository
 
 ```ts
 export interface LocationRepository {
   findById(id: string): Promise<Location | null>;
 
-  upsertCandidates(candidates: ProviderLocation[]): Promise<Location[]>;
+  upsertCandidates(candidates: LocationUpsert[]): Promise<Location[]>;
 }
 ```
 
-The exact provider candidate type can remain at the infrastructure/application boundary; do not leak Prisma models into services.
+Map provider-specific `ProviderLocation` values to `LocationUpsert` before calling the repository. Repositories must return domain models, not Prisma-generated model objects.
 
 ### ForecastRepository
 
@@ -675,7 +695,11 @@ Input
  ↓
 trim + normalize
  ↓
-validate non-empty + max length
+empty?
+ ├── yes → return []
+ └── no
+       ↓
+validate max length
  ↓
 Redis location-search lookup
  ├── hit  → return candidates
@@ -683,7 +707,7 @@ Redis location-search lookup
        ↓
 LocationProvider.searchLocations()
        ↓
-map provider candidates
+map `ProviderLocation` → `LocationUpsert`
        ↓
 upsert by provider + providerLocationId
        ↓
@@ -694,7 +718,8 @@ return candidates
 
 Rules:
 
-- Empty/whitespace-only query → `INVALID_INPUT`.
+- Empty/whitespace-only query → return `[]`.
+- Do not call Open-Meteo for an empty query.
 - Excessively long query → `INVALID_INPUT`.
 - Multiple candidates remain multiple candidates.
 - Never silently select the first candidate.
@@ -883,7 +908,7 @@ if missing → LocationNotFoundError
         ↓
 ForecastService.getForecast(location)
         ↓
-Redis.get(forecast:{locationId})
+Redis.get(weather-activity:v1:forecast:{locationId})
         ├── fresh → return cached forecast
         └── stale/miss
               ↓
@@ -2119,7 +2144,7 @@ Why were these choices made?
     → decisions.md
 
 Exactly how is it implemented?
-    → implementations.md
+    → implementation.md
 ```
 
 The code should then be a direct, reviewable realization of those decisions rather than a second source of architecture.
