@@ -1,7 +1,9 @@
+import { normalizeLocationQuery } from '../../application/location/location-query.js';
+
 const CACHE_NAMESPACE = 'weather-activity:v1';
 
 export function normalizeSearchQuery(query: string): string {
-  return query.trim().toLocaleLowerCase('en-US').replace(/\s+/g, ' ');
+  return normalizeLocationQuery(query);
 }
 
 export function forecastCacheKey(locationId: string): string {

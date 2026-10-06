@@ -1,8 +1,11 @@
 import type { Redis } from 'ioredis';
 import type { Logger } from 'pino';
+import type {
+  ForecastCache,
+  LocationSearchCache,
+} from '../../application/cache/cache.js';
 import type { Forecast } from '../../domain/forecast/forecast.types.js';
 import type { LocationCandidate } from '../../domain/location/location.types.js';
-import type { ForecastCache, LocationSearchCache } from './cache.js';
 import {
   forecastCacheKey,
   locationSearchCacheKey,
