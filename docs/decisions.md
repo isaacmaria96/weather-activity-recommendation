@@ -13,6 +13,7 @@ This document records the key design decisions made during the design of the Wea
 | 007 | 6h freshness / 24h stale fallback | Accepted |
 | 008 | Versioned Redis cache namespace | Accepted |
 | 009 | Mocha + Chai + Sinon for testing | Accepted |
+| 010 | MVP activity scoring heuristics | Accepted |
 
 ---
 
@@ -205,3 +206,30 @@ This is a mature TypeScript/Node.js testing stack and matches existing productio
 **Trade-off**
 
 Unlike Jest, mocking is not built into the test runner, so Sinon is used where mocking or spying is required.
+
+---
+
+## 010 — MVP Activity Scoring Heuristics
+
+**Decision**
+
+Use simple deterministic piecewise scoring tables for MVP activity scoring where the requirements, HLD, LLD, and implementation guide define dimensions and weights but not exact component thresholds.
+
+**Why**
+
+The approved design requires deterministic scores for skiing, surfing, outdoor sightseeing, and indoor sightseeing. It explicitly defines each activity's scoring dimensions and weights, but only partially defines component threshold tables. The MVP needs complete, testable component scoring without adding new dimensions or pretending the thresholds are scientifically calibrated.
+
+**Behaviour**
+
+The implementation preserves the approved weights:
+
+- Skiing: snowfall 40%, temperature 30%, wind 20%, rain/severity 10%.
+- Surfing: wave height 40%, wave period 30%, swell/structure 15%, wind 15%.
+- Outdoor sightseeing: precipitation 35%, temperature 30%, wind 20%, sunshine/severity 15%.
+- Indoor sightseeing: precipitation 40%, temperature 25%, wind 20%, severity 15%.
+
+Missing required inputs produce `NOT_AVAILABLE` with `score = null`. Missing marine data makes surfing unavailable. Scores remain bounded to 0-100.
+
+**Assumption**
+
+The component thresholds are implementation assumptions for the MVP. They are intentionally simple and deterministic, and should be revisited with product/domain input before treating them as calibrated recommendations.
