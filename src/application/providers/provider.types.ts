@@ -1,3 +1,8 @@
+import type {
+  ForecastDay,
+  MarineConditions,
+} from '../../domain/forecast/forecast.types.js';
+
 export type ProviderLocation = {
   provider: string;
   providerLocationId: string;
@@ -18,10 +23,19 @@ export type WeatherForecastRequest = {
 
 export type MarineForecastRequest = WeatherForecastRequest;
 
-export type ProviderWeatherForecast = {
-  days: unknown[];
-};
+export type ProviderWeatherForecastDay = Omit<ForecastDay, 'marine'>;
 
 export type ProviderMarineForecast = {
-  days: unknown[];
+  marineAvailable: boolean;
+  days: ProviderMarineForecastDay[];
+};
+
+export type ProviderMarineForecastDay = {
+  localDate: string;
+  marine: MarineConditions | null;
+};
+
+export type ProviderWeatherForecast = {
+  weatherAvailable: true;
+  days: ProviderWeatherForecastDay[];
 };

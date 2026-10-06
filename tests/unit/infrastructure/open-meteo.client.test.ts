@@ -55,6 +55,24 @@ describe('OpenMeteoClient', () => {
     }
   });
 
+  it('translates network and timeout failures into provider errors', async () => {
+    const fetchStub = sinon.stub().rejects(new Error('network failed'));
+    const client = new OpenMeteoClient(
+      5000,
+      createLogger(),
+      fetchStub as typeof fetch,
+    );
+
+    try {
+      await client.get('https://example.test', '/v1/forecast', {
+        latitude: 51.5,
+      });
+      throw new Error('Expected provider error');
+    } catch (error) {
+      expect(error).to.be.instanceOf(ProviderUnavailableError);
+    }
+  });
+
   function createLogger(): Logger {
     return {
       debug: sinon.stub(),
