@@ -4,6 +4,7 @@ import sinon from 'sinon';
 import { createResolvers } from '../../../src/presentation/graphql/resolvers.js';
 import { typeDefs } from '../../../src/presentation/graphql/schema.js';
 import type { LocationSearchService } from '../../../src/application/location/location.service.js';
+import type { RecommendationReader } from '../../../src/application/recommendation/recommendation.service.js';
 import { InvalidInputError } from '../../../src/shared/errors/application-errors.js';
 
 describe('GraphQL searchLocations', () => {
@@ -90,10 +91,15 @@ describe('GraphQL searchLocations', () => {
     );
   });
 
-  function createServer(locationService: LocationSearchService) {
+  function createServer(
+    locationService: LocationSearchService,
+    recommendationService: RecommendationReader = {
+      getRankings: sinon.stub().rejects(new Error('Unexpected ranking call')),
+    },
+  ) {
     return new ApolloServer({
       typeDefs,
-      resolvers: createResolvers({ locationService }),
+      resolvers: createResolvers({ locationService, recommendationService }),
     });
   }
 });

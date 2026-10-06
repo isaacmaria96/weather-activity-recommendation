@@ -1,18 +1,16 @@
-import { GraphQLError } from 'graphql';
 import type { LocationSearchService } from '../../application/location/location.service.js';
+import type { RecommendationReader } from '../../application/recommendation/recommendation.service.js';
 import { mapApplicationError } from './error-mapper.js';
-
-const notImplemented = () => {
-  throw new GraphQLError('Resolver is not implemented in Phase 1', {
-    extensions: { code: 'NOT_IMPLEMENTED' },
-  });
-};
 
 export type ResolverDependencies = {
   locationService: LocationSearchService;
+  recommendationService: RecommendationReader;
 };
 
-export function createResolvers({ locationService }: ResolverDependencies) {
+export function createResolvers({
+  locationService,
+  recommendationService,
+}: ResolverDependencies) {
   return {
     Query: {
       searchLocations: async (_parent: unknown, args: { query: string }) => {
@@ -22,7 +20,16 @@ export function createResolvers({ locationService }: ResolverDependencies) {
           throw mapApplicationError(error);
         }
       },
-      activityRankings: notImplemented,
+      activityRankings: async (
+        _parent: unknown,
+        args: { locationId: string },
+      ) => {
+        try {
+          return await recommendationService.getRankings(args.locationId);
+        } catch (error) {
+          throw mapApplicationError(error);
+        }
+      },
     },
   };
 }

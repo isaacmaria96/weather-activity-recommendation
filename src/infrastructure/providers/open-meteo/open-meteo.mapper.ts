@@ -1,14 +1,11 @@
 import type { ProviderLocation } from '../../../application/providers/provider.types.js';
-import type {
-  Forecast,
-  ForecastDay,
-  MarineConditions,
-} from '../../../domain/forecast/forecast.types.js';
+import type { MarineConditions } from '../../../domain/forecast/forecast.types.js';
 import { FORECAST_DAYS } from '../../../config/constants.js';
 import type {
   ProviderMarineForecast,
   ProviderWeatherForecast,
 } from '../../../application/providers/provider.types.js';
+export { combineProviderForecasts } from '../../../application/forecast/forecast-normalizer.js';
 import { ProviderUnavailableError } from '../../../shared/errors/application-errors.js';
 import type {
   OpenMeteoGeocodingResult,
@@ -95,40 +92,6 @@ export function mapOpenMeteoMarineForecast(
       localDate,
       marine: mapMarineConditions(daily, index),
     })),
-  };
-}
-
-export function combineProviderForecasts({
-  locationId,
-  snapshotId,
-  fetchedAt,
-  weather,
-  marine,
-}: {
-  locationId: string;
-  snapshotId: string;
-  fetchedAt: Date;
-  weather: ProviderWeatherForecast;
-  marine?: ProviderMarineForecast;
-}): Forecast {
-  const marineByDate = new Map(
-    (marine?.days ?? []).map((day) => [day.localDate, day.marine]),
-  );
-
-  return {
-    snapshotId,
-    locationId,
-    fetchedAt,
-    weatherAvailable: weather.weatherAvailable,
-    marineAvailable: marine?.marineAvailable ?? false,
-    days: weather.days.map((day): ForecastDay => {
-      const marineForDay = marineByDate.get(day.localDate) ?? null;
-
-      return {
-        ...day,
-        marine: marineForDay,
-      };
-    }),
   };
 }
 
